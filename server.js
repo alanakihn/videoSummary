@@ -1,17 +1,20 @@
 import { YoutubeTranscript } from 'youtube-transcript';
-
-//const YoutubeTranscript = require('youtube-transcript');
-
 import express from 'express';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { JSDOM } from 'jsdom';
 
-//const express = require('express');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const app = express();
 const port = 3000;
 
-
+const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
+const document = dom.window.document;
 
 app.use(express.json()); 
-app.use(express.static('homePage'))
+app.use(express.static('homePage'));
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/homePage/home.html');
@@ -34,4 +37,18 @@ app.get('/api/summary', (req, res) => {
 // Start the server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
+    
+    const form = document.getElementById("video-link-form");
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const videoURL = document.getElementById("videoURL").value;
+        fetchTranscript(videoURL);
+    });
+
+    function fetchTranscript(videoURL) {
+        YoutubeTranscript.fetchTranscript(videoURL).then((transcript) => {
+            const transcriptElement = document.getElementById("transcript");
+            transcriptElement.innerHTML = transcript;
+        });
+    }
 });
